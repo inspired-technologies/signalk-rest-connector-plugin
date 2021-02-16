@@ -1,0 +1,25 @@
+{
+  "name": "rest-provider-signalk",
+  "version": "0.1.0",
+  "description": "SignalK plugin to inject data via REST connections",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inspired-technologies/signalk-rest-connector-plugin.git"
+  },
+  "keywords": [
+    "signalk-node-server-plugin"
+  ],
+  "author": "Inspired Technologies",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/inspired-technologies/signalk-rest-connector-plugin/issues"
+  },
+  "homepage": "https://github.com/inspired-technologies/signalk-rest-connector-plugin#readme",
+  "dependencies": {
+    "debug": "^4.3.1"
+  }
+}
