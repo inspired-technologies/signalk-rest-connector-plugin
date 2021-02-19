@@ -140,6 +140,8 @@ module.exports = function (app) {
                 else
                     updates.push(buildDeltaUpdate(pathLabel, waiting))
             }
+            else
+                restConfig[i] = { "enabled": false }
         }
         app.debug(restConfig)
         if (updates.length > 0)
@@ -173,7 +175,7 @@ module.exports = function (app) {
 
         // push delta for path
         for (i=1; i<=configuredPaths; i++)
-            if (restConfig[i].path===path)
+            if (restConfig[i].enabled && restConfig[i].path===path)
                 index = i
 
         if (context === 'vessels.self') {
