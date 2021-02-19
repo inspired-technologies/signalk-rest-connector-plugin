@@ -22,7 +22,7 @@ jobs:
         commit_pattern: "^Release (\\S+)"
         workspace: "."
         publish_command: "yarn"
-        publish_args: "--non-interactive"
+        publish_args: "--registry https://registry.npmjs.org --verbose"
       env: # NPM Token only valid with local IP range
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Leave this as is, it's automatically generated
         NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }} # Configured to inspired-technologies
