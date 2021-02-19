@@ -54,7 +54,8 @@ function createPathSchema(schema, limit, ui) {
             }
         }
 
-        ui[config.title] = {
+        // for future release
+        /* ui[config.title] = {
             'enabled': 'collapsible',
             'prefix': 'collapsible',
             'label': 'collapsible',
@@ -63,7 +64,7 @@ function createPathSchema(schema, limit, ui) {
                 field: config.title.replace(' ', '').toLocaleLowerCase(),
                 wrapClassName: config.title.replace(' ', '').toLocaleLowerCase()+'-group'
             }
-        }
+        } */
 
         restPaths.properties[i] = config
     }
