@@ -22,7 +22,7 @@ jobs:
         commit_pattern: "^Release (\\S+)"
         workspace: "."
         publish_command: "npm publish"
-        publish_args: "--non-interactive"
+        publish_args: "--non-interactive --access public"
       env: # NPM Token only valid with local IP range
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Leave this as is, it's automatically generated
         NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }} # Configured to inspired-technologies
