@@ -7,7 +7,7 @@ on:
 jobs:
   npm-publish:
     name: npm-publish
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
     
     - name: Checkout repository
