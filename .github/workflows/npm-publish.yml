@@ -4,6 +4,10 @@ on:
     branches:
       - main # Default main branch
       
+env: # 
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Leave this as is, it's automatically generated
+  NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }} # Configured to inspired-technologies
+      
 jobs:
   publish:
     name: npm-publish
@@ -20,7 +24,6 @@ jobs:
         git config --global init.defaultBranch main
         git config --global user.name "inspired-technnologies"
         git config --global user.email "service@inspiredtechnologies.eu"
-        npm login
     - name: Publish if version has been updated
       uses: pascalgn/npm-publish-action@1.3.6
       with: # All of theses inputs are optional
@@ -31,6 +34,3 @@ jobs:
         workspace: "."
         publish_command: "npm"
         publish_args: "--tag latest --registry https://registry.npmjs.com --verbose"
-      env: # NPM Token only valid with local IP range
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Leave this as is, it's automatically generated
-        NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }} # Configured to inspired-technologies
