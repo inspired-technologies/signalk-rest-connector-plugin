@@ -1,8 +1,7 @@
 name: npm-release
 on:
-  push:
-    branches:
-      - main # Default main branch
+  release:
+    types: [published]
 
 jobs:
   build:
