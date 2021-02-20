@@ -28,7 +28,7 @@ jobs:
         commit_pattern: "^Release (\\S+)"
         workspace: "."
         publish_command: "npm"
-        publish_args: "--tag latest --registry https://registry.npmjs.org --verbose"
+        publish_args: "--tag latest --registry https://registry.npmjs.com --verbose"
       env: # NPM Token only valid with local IP range
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Leave this as is, it's automatically generated
         NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }} # Configured to inspired-technologies
