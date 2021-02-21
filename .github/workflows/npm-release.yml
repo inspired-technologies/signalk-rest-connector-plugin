@@ -21,11 +21,6 @@ jobs:
         if: steps.check.outputs.changed == 'false'
         run: 'echo "Non release change"'
 
-  create-release:
-    name: Create Release
-    if: steps.check.outputs.changed == 'true'
-    runs-on: ubuntu-latest
-    steps:
       - name: Log when changed
         if: steps.check.outputs.changed == 'true'
         run: 'echo "Version changed commit ${{ steps.check.outputs.commit }}! New version: ${{ steps.check.outputs.version }} (${{ steps.check.outputs.type }})"'
@@ -45,11 +40,6 @@ jobs:
           draft: false
           prerelease: false
           
-  publish-package:
-    name: Publish to NPMJS
-    if: steps.check.outputs.changed == 'true'
-    runs-on: ubuntu-latest
-    steps:
       - name: Install Package & Publish
         if: steps.check.outputs.changed == 'true'
         uses: actions/setup-node@v1
