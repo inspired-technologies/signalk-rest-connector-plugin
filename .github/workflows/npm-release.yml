@@ -34,12 +34,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          tag_name: ${{ steps.check.outputs.version }}
+          release_name: Release ${{ steps.check.outputs.version }} (${{ steps.check.outputs.type }})
           body: |
             New release to NPM
-            - Tagged to ${{ github.ref }}
-            - Second Change
+            - Tagged to ${{ steps.check.outputs.version }}
+            - Release ${{ steps.check.outputs.version }} (${{ steps.check.outputs.type }})
           draft: false
           prerelease: false
           
