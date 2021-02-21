@@ -1,14 +1,58 @@
 name: npm-release
 on:
-  release:
-    types: [published]
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
 
 jobs:
-  build:
+  check:
+    name: Check Release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Check if version has been updated
+        id: check
+        uses: EndBug/version-check@v1
+
+      - name: Log when unchanged
+        if: steps.check.outputs.changed == 'false'
+        run: 'echo "Non release change"'
+
+  create-release:
+    name: Create Release
+    if: steps.check.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log when changed
+        if: steps.check.outputs.changed == 'true'
+        run: 'echo "Version changed commit ${{ steps.check.outputs.commit }}! New version: ${{ steps.check.outputs.version }} (${{ steps.check.outputs.type }})"'
+        
+      - name: Create Release
+        if: steps.check.outputs.changed == 'true'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: |
+            New release to NPM
+            - Tagged to ${{ github.ref }}
+            - Second Change
+          draft: false
+          prerelease: false
+          
+  publish-package:
+    name: Publish to NPMJS
+    if: steps.check.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Package & Publish
+        if: steps.check.outputs.changed == 'true'
+        uses: actions/setup-node@v1
         with:
           node-version: 14
           registry-url: https://registry.npmjs.org/
