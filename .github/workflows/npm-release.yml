@@ -40,13 +40,17 @@ jobs:
           draft: false
           prerelease: false
           
-      - name: Install Package & Publish
+      - name: Setup Node
         if: steps.check.outputs.changed == 'true'
         uses: actions/setup-node@v1
         with:
           node-version: 14
           registry-url: https://registry.npmjs.org/
-      - run: yarn install
-      - run: npm publish --access public
+      - name: Install Package 
+        if: steps.check.outputs.changed == 'true'
+        run: yarn install
+      - name: Publish Package 
+        if: steps.check.outputs.changed == 'true'
+        run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_AUTH_TOKEN}}
