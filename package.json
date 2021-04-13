@@ -1,6 +1,6 @@
 {
   "name": "rest-provider-signalk",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "SignalK plugin to inject data via REST connections",
   "main": "index.js",
   "scripts": {
@@ -11,7 +11,9 @@
     "url": "git+https://github.com/inspired-technologies/signalk-rest-connector-plugin.git"
   },
   "keywords": [
-    "signalk-node-server-plugin"
+    "signalk",
+    "signalk-node-server-plugin",
+    "signalk-category-utility"
   ],
   "author": "Inspired Technologies",
   "license": "MIT",
