@@ -37,13 +37,28 @@ function createPathSchema(schema, limit, ui) {
                     enum: [
                         "navigation",
                         "environment",
-                        "sensors"
+                        "sensors",
+                        "electrical",
+                        "performance"
                     ]
                 },
                 label: {
                     type: 'string',
                     title: 'SignalK Path',
-                    description: 'Sublevel path to receive data'                    },              
+                    description: 'Sublevel path to receive data'
+                },
+                unit: {
+                    type: 'string',
+                    title: 'SignalK Unit',
+                    description: 'Meta unit to be set (if not PGN, should comply with http://signalk.org/specification/1.2.0/doc/)',
+                    default: '' 
+                },     
+                interval: {
+                    type: 'number',
+                    title: 'Refresh rate',
+                    description: 'Expected time in s between incoming data points',
+                    default: null 
+                },              
                 source: {
                     type: 'string',
                     title: 'Data Source', 
@@ -53,18 +68,15 @@ function createPathSchema(schema, limit, ui) {
             }
         }
 
-        // for future release
-        /* ui[config.title] = {
-            'enabled': 'collapsible',
-            'prefix': 'collapsible',
-            'label': 'collapsible',
-            'source': 'collapsible',
+        /*
+        ui['restpaths.'+i] = {
+            "ui:field": "collapsible",
             collapse: {
-                field: config.title.replace(' ', '').toLocaleLowerCase(),
-                wrapClassName: config.title.replace(' ', '').toLocaleLowerCase()+'-group'
+              field: "ObjectField",
+              wrapClassName: 'panel-group'
+              }
             }
-        } */
-
+        */
         restPaths.properties[i] = config
     }
 
@@ -113,10 +125,14 @@ module.exports = function (app) {
             let pathLabel
             let pathValue
             let pathSource
+            let pathUnit
+            let refreshRate
             if (restpaths && (restpaths[i].prefix!='' && restpaths[i].label!='')) {
                 pathEnabled = restpaths[i].hasOwnProperty('enabled') ? restpaths[i].enabled : false
                 pathLabel = restpaths[i].prefix+"."+restpaths[i].label
+                pathUnit = restpaths[i].unit==='' ? null : restpaths[i].unit 
                 pathValue = restpaths[i].hasOwnProperty('value') ? restpaths[i].value : noVal
+                refreshRate = restpaths[i].interval===0 ? null : restpaths[i].interval
                 pathSource = restpaths[i].source
             } else {
                 pathEnabled = false
@@ -129,6 +145,8 @@ module.exports = function (app) {
                 "enabled": pathEnabled,
                 "path": pathLabel,
                 "value": pathValue,
+                "unit": pathUnit,
+                "refresh": refreshRate,
                 "source": pathSource,
                 "last": currentVal,
                 "updated": "never"
@@ -153,15 +171,21 @@ module.exports = function (app) {
 
     function register () {
         app.setPluginStatus('Registering');
+        let metas = []
     
         // do some initialization     
         app.debug("Registering active PUT Handler(s) ...")
         for (let i = 1; i <= Object.keys(restConfig).length; i++) {
             if (restConfig[i].enabled) {
                 app.registerPutHandler('vessels.self', restConfig[i].path, handle, restConfig[i].source)
+                let value = (restConfig[i].unit && restConfig[i].unit!==null ? { units: restConfig[i].unit } : {} )
+                if (restConfig[i].refresh!==null) value.timeout = restConfig[i].refresh 
+                metas.push(buildDeltaUpdate(restConfig[i].path, value))                
                 app.debug("Handler for '"+restConfig[i].path+"' registered for "+ restConfig[i].source)
             }
         }
+        if (metas.length>0)
+            sendMeta(metas)
 
         // app.setPluginError('Error connecting to database');
         app.setPluginStatus('Registered');    
@@ -191,7 +215,7 @@ module.exports = function (app) {
                 restConfig[index].last = currentVal.value
                 restConfig[index].updated = new Date(Date.now()).toISOString()
                 restConfig[index].value = value
-                update.push(buildDeltaUpdate(path, value))
+                update.push(buildDeltaUpdate(path, value, restConfig[index].refresh))
             }
         }
 
@@ -240,7 +264,16 @@ module.exports = function (app) {
                 }
             }
         }
-    
+
+        /* plugin.uiSchema = { 
+            limit: {
+                "ui:field": "collapsible",
+                collapse: {
+                    field: "NumberField"
+                }
+            }
+        }  */ 
+
         if (configuredPaths>0)
             createPathSchema(schema, configuredPaths, plugin.uiSchema)
 
@@ -261,15 +294,15 @@ module.exports = function (app) {
         });
     }
 
-    function sendMeta(units, index) {
-        app.handleMessage('rest-provider-signalk' (index ? '.'+index : ''), {
+    function sendMeta(units) {
+        app.handleMessage('rest-provider-signalk', {
             updates: [
                 {
                     meta: units
                 }
             ]   
         })
-      }
+    }
 
     function log(msg) { app.debug(msg); }
 
