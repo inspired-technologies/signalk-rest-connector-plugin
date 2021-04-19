@@ -1,6 +1,5 @@
 'use strict'
 const debug = require("debug")("signalk:rest-provider-signalk")
-// const ow = require('./openweather')
 const maxPaths = 9
 
 function buildDeltaUpdate(path, value) {
@@ -77,7 +76,7 @@ module.exports = function (app) {
     var plugin = {};
     var restConfig = {};
     let configuredPaths = 0;
-    const waiting = "waiting ..."
+    const noVal = null
 
     plugin.id = 'rest-provider-signalk';
     plugin.name = 'REST Endpoint Provider';
@@ -117,7 +116,7 @@ module.exports = function (app) {
             if (restpaths && (restpaths[i].prefix!='' && restpaths[i].label!='')) {
                 pathEnabled = restpaths[i].hasOwnProperty('enabled') ? restpaths[i].enabled : false
                 pathLabel = restpaths[i].prefix+"."+restpaths[i].label
-                pathValue = restpaths[i].hasOwnProperty('value') ? restpaths[i].value : waiting
+                pathValue = restpaths[i].hasOwnProperty('value') ? restpaths[i].value : noVal
                 pathSource = restpaths[i].source
             } else {
                 pathEnabled = false
@@ -134,12 +133,12 @@ module.exports = function (app) {
                 "last": currentVal,
                 "updated": "never"
                 }
-                if (pathValue!==waiting)
+                if (pathValue!==noVal)
                     updates.push(buildDeltaUpdate(pathLabel, pathValue))
                 else if (currentVal)
                     updates.push(buildDeltaUpdate(pathLabel, currentVal))
                 else
-                    updates.push(buildDeltaUpdate(pathLabel, waiting))
+                    updates.push(buildDeltaUpdate(pathLabel, noVal))
             }
             else
                 restConfig[i] = { "enabled": false }
@@ -181,7 +180,7 @@ module.exports = function (app) {
 
         if (context === 'vessels.self') {
             let currentVal = app.getSelfPath(path)
-            if (currentVal.value!==waiting && typeof currentVal.value !== typeof value) { 
+            if (currentVal.value!==noVal && typeof currentVal.value !== typeof value) { 
                 error = true; 
                 errMsg = "Type mismatch: '"+ typeof value + "' doesn't match '" + typeof currentVal +"'"
                 let handler = 'rest-provider-signalk' + (index ? '.'+index : '')
