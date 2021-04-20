@@ -11,6 +11,7 @@
     "url": "git+https://github.com/inspired-technologies/signalk-rest-connector-plugin.git"
   },
   "keywords": [
+    "signalk",
     "signalk-node-server-plugin",
     "signalk-category-utility"
   ],
