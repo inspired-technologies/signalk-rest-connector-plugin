@@ -69,15 +69,6 @@ function createPathSchema(schema, limit, ui) {
             }
         }
 
-        /*
-        ui['restpaths.'+i] = {
-            "ui:field": "collapsible",
-            collapse: {
-              field: "ObjectField",
-              wrapClassName: 'panel-group'
-              }
-            }
-        */
         restPaths.properties[i] = config
     }
 
@@ -265,15 +256,6 @@ module.exports = function (app) {
                 }
             }
         }
-
-        /* plugin.uiSchema = { 
-            limit: {
-                "ui:field": "collapsible",
-                collapse: {
-                    field: "NumberField"
-                }
-            }
-        }  */ 
 
         if (configuredPaths>0)
             createPathSchema(schema, configuredPaths, plugin.uiSchema)
