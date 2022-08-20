@@ -39,7 +39,8 @@ function createPathSchema(schema, limit, ui) {
                         "environment",
                         "sensors",
                         "electrical",
-                        "performance"
+                        "performance",
+                        "propulsion"
                     ]
                 },
                 label: {
