@@ -190,7 +190,7 @@ module.exports = function (app) {
         let index = 0
 
         // push delta for path
-        for (i=1; i<=configuredPaths; i++)
+        for (let i = 1; i<=configuredPaths; i++)
             if (restConfig[i].enabled && restConfig[i].path===path)
                 index = i
 
