@@ -21,6 +21,15 @@
             "port": 9229,
             "localRoot": "${workspaceFolder}",
             "remoteRoot": "/home/pi/src/signalk-rest-connector-plugin"
+        },
+        {
+            "type": "node",
+            "request": "attach",
+            "name": "Attach to XDevPi",
+            "address": "192.168.0.99",
+            "port": 9229,
+            "localRoot": "${workspaceFolder}",
+            "remoteRoot": "/home/pi/src/signalk-rest-connector-plugin"
         }
     ]
 }
