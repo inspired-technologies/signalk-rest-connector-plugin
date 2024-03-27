@@ -1,6 +1,6 @@
 {
   "name": "rest-provider-signalk",
-  "version": "0.3.1",
+  "version": "0.5.0",
   "description": "SignalK plugin to inject data via REST connections",
   "main": "index.js",
   "scripts": {

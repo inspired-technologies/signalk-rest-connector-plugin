@@ -40,7 +40,8 @@ function createPathSchema(schema, limit, ui) {
                         "sensors",
                         "electrical",
                         "performance",
-                        "propulsion"
+                        "propulsion",
+                        "sails"
                     ]
                 },
                 label: {
@@ -51,7 +52,7 @@ function createPathSchema(schema, limit, ui) {
                 unit: {
                     type: 'string',
                     title: 'SignalK Unit',
-                    description: 'Meta unit to be set (if not PGN, should comply with http://signalk.org/specification/1.2.0/doc/)',
+                    description: 'Meta unit to be set (if not PGN, should comply with https://signalk.org/specification/1.7.0/doc/)',
                     default: '' 
                 },     
                 interval: {
@@ -157,7 +158,6 @@ module.exports = function (app) {
         if (updates.length > 0)
             sendDelta(updates)
     
-        // app.setPluginError('Error connecting to database');
         app.setPluginStatus('Done initializing');    
     }
 
@@ -179,7 +179,6 @@ module.exports = function (app) {
         if (metas.length>0)
             sendMeta(metas)
 
-        // app.setPluginError('Error connecting to database');
         app.setPluginStatus('Registered');    
     }
 
