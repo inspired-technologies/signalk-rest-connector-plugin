@@ -186,14 +186,12 @@ module.exports = function (app) {
         let error = false
         let errMsg = ''
         let update = []
-        let index = 0
 
         // push delta for path
-        for (let i = 1; i<=configuredPaths; i++)
-            if (restConfig[i].enabled && restConfig[i].path===path)
-                index = i
-
-        if (context === 'vessels.self') {
+        let configured = Object.keys(restConfig).map(i => { return { "key": i, "config": restConfig[i] }})
+            .filter(rc => rc.config.hasOwnProperty('enabled') && rc.config.enabled===true)
+        let index = configured.map(rc => rc.config.path).indexOf(path)
+        if (context === 'vessels.self' && index!==-1) {
             let currentVal = app.getSelfPath(path)
             if (currentVal.value!==noVal && typeof currentVal.value !== typeof value) { 
                 error = true; 
@@ -203,10 +201,10 @@ module.exports = function (app) {
             }
             else
             {
-                restConfig[index].last = currentVal.value
-                restConfig[index].updated = new Date(Date.now()).toISOString()
-                restConfig[index].value = value
-                update.push(buildDeltaUpdate(path, value, restConfig[index].refresh))
+                restConfig[configured[index].key].last = currentVal.value
+                restConfig[configured[index].key].updated = new Date(Date.now()).toISOString()
+                restConfig[configured[index].key].value = value
+                update.push(buildDeltaUpdate(path, value, restConfig[configured[index].key].refresh))
             }
         }
 
