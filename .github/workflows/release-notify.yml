@@ -1,7 +1,10 @@
-name: Check teams notification
+name: Push teams notification
 
 on:
-  push: {}
+  push:
+    # Sequence of patterns matched against refs/tags
+    branches:
+      - main
   release: {}
 
 jobs:
