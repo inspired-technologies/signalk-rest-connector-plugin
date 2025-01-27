@@ -1,5 +1,75 @@
 'use strict'
 const debug = require("debug")("signalk:rest-provider-signalk")
+const putApi = (tag, summary, desc, type) => { return {
+    "put": {
+      "tags": [
+        tag
+      ],
+      "summary": summary,
+      "description": desc,
+      "parameters": [],
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "value", "source"
+              ],
+              "properties": {
+                "value": {
+                  "type": type
+                },
+                "source": {
+                    "type": "string"
+                }, 
+                "login": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "token"
+                    ],                
+                    "properties": {
+                        "token": {
+                          "type": "string"
+                          },
+                    }
+                }
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Successful operation"
+        }
+      }
+    }
+}}}
+
+const openApi = (id, name, description, version) => { return {
+    "openapi": "3.0.3",
+    "info": {
+        "title": name,
+        "description": description,
+        "version": version
+    },
+    "servers": [
+      {
+        "url": "/signalk/v1/api"
+      }
+    ],
+    "tags": [
+      {
+        "name": id
+        // "description": name
+      }
+    ],
+    "paths": {}
+}}
+
+let openapi
 
 module.exports = function (app) {
 
@@ -32,19 +102,19 @@ module.exports = function (app) {
                     app.debug('Plugin configuration updated!')
                 })
             }
-            if (settings.hasOwnProperty('paths') && Array.isArray(settings.paths) && restConfig.length<1) {
+            if (settings.hasOwnProperty('paths') && Array.isArray(settings.paths))
                 plugin.init(settings.paths);
-                if (restConfig.length>0)
-                    plugin.register();
-            } 
 
             app.debug('Plugin started');
             app.setPluginStatus('Started');  
         },
 
         init: (restPaths) => {
-            app.setPluginStatus('Initializing');
-            // do some initialization     
+            if (restConfig.length>0)
+                app.setPluginStatus('Re-Initializing');
+            else
+                app.setPluginStatus('Initializing');
+            // do some initialization  
             app.debug("Configuring REST Provider ...")
             let updates = []
 
@@ -84,7 +154,11 @@ module.exports = function (app) {
                                 source: pathSource,
                                 last: currentVal,
                                 updated: "never",
-                                debug: pathDebug
+                                debug: pathDebug,
+                                api: putApi(p.prefix, `Update ${p.label.split('.')[0]} ${p.label.split('.')[p.label.split('.').length-1]}`,
+                                    `Receive updated value via REST - expected unit: '${p.unit}'`, 
+                                    currentVal && currentVal !== null ? typeof currentVal : pathValue!==noVal ? typeof pathValue : 
+                                    pathUnit==="" ? "string" : "number")
                             }
                         )
                         // store latest update
@@ -99,11 +173,17 @@ module.exports = function (app) {
                 if (updates.length > 0)
                 sendDelta(updates)
                     app.debug(restConfig)
-            }     
+            }
+
+            openapi = openApi(plugin.id, plugin.name, plugin.description, "1.0.0")
+            restConfig.forEach(c => {
+                openapi.paths['/'+c.path.replaceAll('.','/')] = c.api
+            })
+
             app.setPluginStatus('Initialized');    
         },
 
-        register: () => {
+        registerWithRouter: () => {
             app.setPluginStatus('Registering');
             let metas = []
     
@@ -121,7 +201,7 @@ module.exports = function (app) {
             if (metas.length>0)
                 sendMeta(metas)
 
-            app.setPluginStatus('Registered');    
+            app.setPluginStatus(`Registered: ${restConfig.length} paths active`);
         },
 
         handle: (context, path, value, callback) => {
@@ -177,6 +257,8 @@ module.exports = function (app) {
             unsubscribes = [];
             app.debug('Plugin stopped');
         },
+
+        getOpenApi: () => openapi,
 
         schema: {
             type: "object",
@@ -278,8 +360,6 @@ module.exports = function (app) {
             ]   
         })
     }
-
-    function log(msg) { app.debug(msg); }
 
     return plugin;
 }
