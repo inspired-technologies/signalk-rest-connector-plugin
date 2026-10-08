@@ -23,5 +23,4 @@ Each path can be selectively enabled or disabled. Max # of paths has been set to
 ***
 
 ## Release Notes
-- v0.2 update to include metas for units and timeout
-- v0.3 added propulsion as base path 
+See [Changelog](CHANGELOG.md).
