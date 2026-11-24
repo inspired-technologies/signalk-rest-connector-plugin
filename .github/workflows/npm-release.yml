@@ -1,61 +1,65 @@
+# NPM Release - npm trusted publishing (OIDC), no long-lived npm token.
+# Prerequisite on npmjs.com: package settings > Trusted publisher > GitHub Actions
+#   organization/user: inspired-technologies, repository: signalk-rest-connector-plugin, workflow: npm-release.yml
 name: npm-release
+
 on:
   push:
-    # Sequence of patterns matched against refs/tags
-    branches:
-      - main
+    branches: [ main ]
+
+permissions:
+  contents: read
 
 jobs:
-  check:
-    name: Check Release
-    runs-on: ubuntu-latest
+  publish:
+    name: Release to NPM
+    runs-on: ubuntu-latest      # trusted publishing requires GitHub-hosted runners
+    permissions:
+      contents: write           # create the GitHub release
+      id-token: write           # OIDC token for npm trusted publishing
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Check if version has been updated
-        id: check
-        uses: EndBug/version-check@v2
-        with:
-          file-url: https://unpkg.com/rest-provider-signalk@latest/package.json
-          static-checking: localIsNew
-
-      - name: Log when unchanged
-        if: steps.check.outputs.changed == 'false'
-        run: 'echo "Non release change"'
-
-      - name: Log when changed
-        if: steps.check.outputs.changed == 'true'
-        run: 'echo "Version changed commit ${{ steps.check.outputs.commit }}! New version: ${{ steps.check.outputs.version }} (${{ steps.check.outputs.type }})"'
-        
-      - name: Create Release
-        if: steps.check.outputs.changed == 'true'
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-        with:
-          tag_name: ${{ steps.check.outputs.version }}
-          release_name: Release ${{ steps.check.outputs.version }} (${{ steps.check.outputs.type }})
-          body: |
-            New release to NPM
-            - Tagged to ${{ steps.check.outputs.version }}
-            - Release ${{ steps.check.outputs.version }} (${{ steps.check.outputs.type }})
-          draft: false
-          prerelease: false
-          
       - name: Setup Node
-        if: steps.check.outputs.changed == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           registry-url: https://registry.npmjs.org/
-      - name: Install Package 
+
+      # Works for the first publish too - unlike a lookup of package.json on unpkg.
+      - name: Check if version has been updated
+        id: check
+        run: |
+          name=$(node -p "require('./package.json').name")
+          version=$(node -p "require('./package.json').version")
+          published=$(npm view "$name@$version" version 2>/dev/null || true)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [ "$published" = "$version" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Non release change - $name@$version is already published"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "New version $name@$version"
+          fi
+
+      - name: Install and test
         if: steps.check.outputs.changed == 'true'
-        run: npm ci
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_AUTH_TOKEN}}
-      - name: Publish Package 
+        run: |
+          npm install -g npm@11
+          npm install
+          npm test
+
+      - name: Publish Package
         if: steps.check.outputs.changed == 'true'
         run: npm publish --access public
+
+      - name: Create Release
+        if: steps.check.outputs.changed == 'true'
         env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_AUTH_TOKEN}}
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.check.outputs.version }}
+        run: |
+          gh release create "$VERSION" --target "$GITHUB_SHA" \
+            --title "Release $VERSION" \
+            --notes "New release to NPM - rest-provider-signalk@$VERSION - see CHANGELOG.md"
