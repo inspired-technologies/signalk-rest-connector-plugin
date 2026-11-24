@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "debug": "node --inspect-brk=192.168.0.97:9229 /usr/lib/node_modules/signalk-server/bin/signalk-server -c /home/pi/signalk",
-    "test": "node --test test/*.js"
+    "test": "node --test test/*.test.js"
   },
   "repository": {
     "type": "git",
@@ -22,6 +22,16 @@
     "url": "https://github.com/inspired-technologies/signalk-rest-connector-plugin/issues"
   },
   "homepage": "https://github.com/inspired-technologies/signalk-rest-connector-plugin#readme",
+  "files": [
+    "index.js",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "signalk": {
+    "displayName": "REST Endpoint Provider"
+  },
   "dependencies": {
     "debug": "^4.4.3"
   }
