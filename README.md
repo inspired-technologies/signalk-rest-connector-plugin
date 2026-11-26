@@ -11,7 +11,7 @@ The plugin will inject new SignalK values, eg. `navigation.gnss.antennaAltitude`
 ![Plugin Configuration](./PathConfig.png)
 
 - **Unit** - the SignalK unit of the path (published as meta `units`), or the unit the values are sent in. Values in
-  km/h, kn, mph, Bft, °C, °F, °, hPa, mbar, kPa, inHg, mmHg, psi, km, nm (nautical miles), mi, ft, cm, %, l, gal,
+  km/h, kn, mph, Bft, °C, deg, °F (temperatures), °, degrees (angles), hPa, mbar, kPa, inHg, mmHg, psi, km, nm (nautical miles), mi, ft, cm, %, l, gal,
   rpm, Ah, Wh, kWh, h or min are converted to their SignalK unit (eg. km/h → m/s) with the `skunits.js` shared by
   the Inspired Technologies plugins; the configuration form lists the conversions. Any other unit - SignalK units
   included - is published unchanged.

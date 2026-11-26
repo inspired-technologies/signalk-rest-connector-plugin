@@ -14,7 +14,7 @@ Releases 0.5 - 0.7.5 are not documented here.
 - Configuration defaults: refresh rate 0 instead of empty, no `"undefined"` text as data source.
 
 ### Feature
-- Unit conversion with the shared `skunits.js`: the unit of a path can be the unit the values are sent in - km/h, kn, mph, Bft, °C, °F, °, hPa, mbar, kPa, inHg, mmHg, psi, km, nm, mi, ft, cm, %, l, gal, rpm, Ah, Wh, kWh, h, min are converted to their SignalK unit, which is published as meta. Any other unit is published unchanged, as before. **Note:** a path configured with one of these units so far published the values as received with that unit as meta - it now publishes them converted, with the SignalK unit (the measured quantity stays the same, eg. 10 kn → 5.14 m/s). Clients were expected to send SignalK units anyway.
+- Unit conversion with the shared `skunits.js`: the unit of a path can be the unit the values are sent in - km/h, kn, mph, Bft, °C, deg, °F (temperatures), °, degrees (angles), hPa, mbar, kPa, inHg, mmHg, psi, km, nm, mi, ft, cm, %, l, gal, rpm, Ah, Wh, kWh, h, min are converted to their SignalK unit, which is published as meta. Any other unit is published unchanged, as before. **Note:** a path configured with one of these units so far published the values as received with that unit as meta - it now publishes them converted, with the SignalK unit (the measured quantity stays the same, eg. 10 kn → 5.14 m/s). Clients were expected to send SignalK units anyway.
 - The plugin status shows the number of configured and active paths.
 - README: PUT requests need a user or device with readwrite (or admin) permission, the server's ACLs apply.
 
