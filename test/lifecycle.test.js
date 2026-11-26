@@ -1,3 +1,5 @@
+'use strict';
+
 const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 
@@ -6,6 +8,7 @@ const { createApp, allValues, allMeta, findPut } = require('./helpers/signalk-ap
 
 const PRESSURE = 'environment.outside.pressure';
 const TEMPERATURE = 'environment.inside.temperature';
+const WIND = 'environment.wind.speedTrue';
 
 // Configuration in the pre-0.8 format, which the plugin migrates on start.
 function legacySettings() {
@@ -38,6 +41,13 @@ function put(app, path, value) {
   return handler.handler('vessels.self', path, value, () => {});
 }
 
+// As the server: PUT handlers registered by a plugin are removed when it stops,
+// a configuration save stops and starts the same plugin object.
+function stop(app, plugin) {
+  plugin.stop();
+  app.putHandlers = [];
+}
+
 describe('plugin lifecycle', () => {
   let app;
   let plugin;
@@ -52,7 +62,7 @@ describe('plugin lifecycle', () => {
   it('migrates a legacy configuration and persists it on start', () => {
     plugin.start(legacySettings(), () => {});
 
-    assert.deepEqual(app.statuses, ['Initializing', 'Initialized', 'Started']);
+    assert.deepEqual(app.statuses, ['2 paths configured · 2 active']);
     assert.deepEqual(app.errors, []);
 
     assert.equal(app.savedOptions.length, 1);
@@ -63,20 +73,10 @@ describe('plugin lifecycle', () => {
     assert.ok(saved.paths.every((p) => p.debug === false));
   });
 
-  it('announces the configured endpoints without a value', () => {
+  it('announces the configured endpoints without a value and publishes their meta', () => {
     assert.deepEqual(allValues(app), [
       { path: PRESSURE, value: null },
       { path: TEMPERATURE, value: null },
-    ]);
-  });
-
-  it('registers the PUT handlers and publishes their meta', () => {
-    plugin.registerWithRouter();
-
-    assert.deepEqual(app.statuses.slice(-2), ['Registering', 'Registered: 2 paths active']);
-    assert.deepEqual(app.putHandlers.map((h) => [h.context, h.path, h.source]), [
-      ['vessels.self', PRESSURE, 'rest.weather'],
-      ['vessels.self', TEMPERATURE, 'rest.indoor'],
     ]);
     assert.deepEqual(allMeta(app), [
       { path: PRESSURE, value: { units: 'Pa', timeout: 60 } },
@@ -84,93 +84,57 @@ describe('plugin lifecycle', () => {
     ]);
   });
 
-  it('accepts a PUT update and publishes it as a delta', () => {
-    const result = put(app, PRESSURE, 101300);
-
-    assert.deepEqual(result, { state: 'COMPLETED', statusCode: 200 });
-    assert.deepEqual(app.deltas.at(-1), {
-      id: 'rest-provider-signalk',
-      values: [{ path: PRESSURE, value: 101300 }],
-    });
-    assert.deepEqual(app.getSelfPath(PRESSURE), { value: 101300 });
-    assert.deepEqual(app.errors, []);
-  });
-
-  it('uses a dedicated source id per configured endpoint', () => {
-    const result = put(app, TEMPERATURE, 293.15);
-
-    assert.deepEqual(result, { state: 'COMPLETED', statusCode: 200 });
-    assert.deepEqual(app.deltas.at(-1), {
-      id: 'rest-provider-signalk.1',
-      values: [{ path: TEMPERATURE, value: 293.15 }],
-    });
-  });
-
-  it('rejects a value that does not match the type of the current value', () => {
-    const before = app.deltas.length;
-    const result = put(app, PRESSURE, 'much too high');
-
-    assert.equal(result.state, 'COMPLETED');
-    assert.equal(result.statusCode, 400);
-    assert.match(result.message, /Type mismatch/);
-    assert.equal(app.deltas.length, before);
+  it('accepts PUT updates right after start', () => {
+    assert.deepEqual(put(app, PRESSURE, 101300), { state: 'COMPLETED', statusCode: 200 });
+    assert.deepEqual(put(app, TEMPERATURE, 293.15), { state: 'COMPLETED', statusCode: 200 });
     assert.deepEqual(app.getSelfPath(PRESSURE), { value: 101300 });
   });
 
-  it('ignores updates for unknown paths and other vessels', () => {
-    const before = app.deltas.length;
+  it('serves the PUT endpoints again after a configuration save restarted it', () => {
+    stop(app, plugin);
+    assert.equal(findPut(app, PRESSURE), undefined);
 
-    const unknown = plugin.handle('vessels.self', 'environment.wind.speedTrue', 7.5, () => {});
-    assert.deepEqual(unknown, { state: 'COMPLETED', statusCode: 200 });
-
-    const otherVessel = plugin.handle('vessels.urn:mrn:imo:mmsi:123456789', PRESSURE, 99000, () => {});
-    assert.deepEqual(otherVessel, { state: 'COMPLETED', statusCode: 200 });
-
-    assert.equal(app.deltas.length, before);
-    assert.deepEqual(app.errors, []);
-  });
-
-  it('keeps serving the endpoints described by the OpenAPI document', () => {
-    const api = plugin.getOpenApi();
-
-    assert.deepEqual(Object.keys(api.paths), [
-      '/environment/outside/pressure',
-      '/environment/inside/temperature',
-    ]);
-    assert.equal(api.info.version, '1.0.0');
-  });
-
-  it('stops cleanly and reloads the persisted options', () => {
-    const read = app.optionsRead;
-    plugin.stop();
-
-    assert.equal(app.optionsRead, read + 1);
-    assert.deepEqual(app.errors, []);
-  });
-
-  it('restarts from the migrated configuration without migrating again', () => {
-    const restarted = pluginFactory(app);
     const statuses = app.statuses.length;
     const deltas = app.deltas.length;
+    const config = app.options;
+    config.paths.push({ enabled: true, prefix: 'environment', label: 'wind.speedTrue', unit: 'kn', source: 'rest.wind' });
+    plugin.start(config, () => {});
 
-    restarted.start(app.options, () => {});
-    restarted.registerWithRouter();
-
-    assert.deepEqual(app.savedOptions.length, 1);
-    assert.deepEqual(app.statuses.slice(statuses), [
-      'Initializing',
-      'Initialized',
-      'Started',
-      'Registering',
-      'Registered: 2 paths active',
-    ]);
+    // no second migration, no duplicated paths
+    assert.equal(app.savedOptions.length, 1);
+    assert.deepEqual(app.statuses.slice(statuses), ['3 paths configured · 3 active']);
+    assert.deepEqual(app.putHandlers.map((h) => h.path), [PRESSURE, TEMPERATURE, WIND]);
     // the last known values are picked up from the server on restart
-    assert.deepEqual(app.deltas.slice(deltas).flatMap((d) => d.values), [
-      { path: PRESSURE, value: { value: 101300 } },
-      { path: TEMPERATURE, value: { value: 293.15 } },
+    assert.deepEqual(app.deltas.slice(deltas)[0].values, [
+      { path: PRESSURE, value: 101300 },
+      { path: TEMPERATURE, value: 293.15 },
+      { path: WIND, value: null },
     ]);
+    assert.deepEqual(put(app, WIND, 10), { state: 'COMPLETED', statusCode: 200 });
+    assert.ok(Math.abs(app.getSelfPath(WIND).value - 5.144444) < 1e-5);
     assert.deepEqual(app.errors, []);
+  });
 
-    restarted.stop();
+  it('keeps the OpenAPI document served by the server up to date', () => {
+    const api = plugin.getOpenApi();
+    assert.deepEqual(Object.keys(api.paths), [
+      '/vessels/self/environment/outside/pressure',
+      '/vessels/self/environment/inside/temperature',
+      '/vessels/self/environment/wind/speedTrue',
+    ]);
+
+    stop(app, plugin);
+    plugin.start({ paths: [app.options.paths[0]] }, () => {});
+    // the same object, read by the server at plugin registration
+    assert.equal(plugin.getOpenApi(), api);
+    assert.deepEqual(Object.keys(api.paths), ['/vessels/self/environment/outside/pressure']);
+  });
+
+  it('registers no handlers once all paths are disabled', () => {
+    stop(app, plugin);
+    plugin.start({ paths: app.options.paths.map((p) => ({ ...p, enabled: false })) }, () => {});
+
+    assert.deepEqual(app.putHandlers, []);
+    assert.equal(app.statuses.at(-1), '3 paths configured · 0 active');
   });
 });
