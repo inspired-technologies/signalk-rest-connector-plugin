@@ -25,13 +25,15 @@
   "files": [
     "index.js",
     "skunits.js",
+    "img/logo.png",
     "CHANGELOG.md"
   ],
   "engines": {
     "node": ">=20"
   },
   "signalk": {
-    "displayName": "REST Endpoint Provider"
+    "displayName": "REST Endpoint Provider",
+    "appIcon": "./img/logo.png"
   },
   "dependencies": {
     "debug": "^4.4.3"
