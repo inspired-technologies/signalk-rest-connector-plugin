@@ -5,11 +5,11 @@ const units = require('./skunits')
 /*
     Units of received values converted to their SignalK unit with the shared skunits.js - any other unit,
     a SignalK unit included, is published unchanged. Fixed list, verified against skunits.js by the tests.
-    'deg' is not converted: skunits treats it as °C, SignalK as angle (cohort backlog topic).
+    'deg' is a temperature like in skunits (→ K), angles are given in ° or degrees (→ rad).
 */
 const SOURCE_UNITS = {
     'm/s': ['km/h', 'kn', 'mph', 'Bft'],
-    'K': ['°C', '°F'],
+    'K': ['°C', 'deg', '°F'],
     'rad': ['°', 'degrees'],
     'Pa': ['hPa', 'mbar', 'kPa', 'inHg', 'mmHg', 'psi'],
     'm': ['km', 'nm', 'mi', 'ft', 'cm'],
