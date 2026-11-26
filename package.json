@@ -24,6 +24,7 @@
   "homepage": "https://github.com/inspired-technologies/signalk-rest-connector-plugin#readme",
   "files": [
     "index.js",
+    "skunits.js",
     "CHANGELOG.md"
   ],
   "engines": {
