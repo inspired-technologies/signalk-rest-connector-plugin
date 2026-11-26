@@ -23,8 +23,10 @@ describe('source units', () => {
     }
   }
 
-  it('does not list deg - skunits treats it as °C, SignalK as angle', () => {
-    assert.ok(!Object.values(SOURCE_UNITS).flat().includes('deg'));
+  it('converts deg as a temperature and ° / degrees as an angle', () => {
+    assert.ok(SOURCE_UNITS.K.includes('deg'));
+    assert.deepEqual(sk.toSignalK('deg', 4.3), { value: 277.45, units: 'K' });
+    assert.ok(Math.abs(sk.toSignalK('degrees', 180).value - Math.PI) < 1e-9);
   });
 
   it('lists every convertible unit in the description of the unit field', () => {

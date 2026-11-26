@@ -246,8 +246,17 @@ describe('unit conversion', () => {
     assert.ok(Math.abs(allValues(app)[0].value - 5.144444) < 1e-5);
   });
 
-  it('passes SignalK units, unknown units and deg through unchanged', (t) => {
-    for (const unit of ['m/s', 'V', 'deg']) {
+  it('converts deg to K', (t) => {
+    const { app, plugin } = converting('deg');
+    t.after(() => plugin.stop());
+
+    assert.deepEqual(allMeta(app), [{ path: 'environment.wind.speedTrue', value: { units: 'K' } }]);
+    put(app, 'environment.wind.speedTrue', 4.3);
+    assert.ok(Math.abs(app.deltas.at(-1).values[0].value - 277.45) < 1e-9);
+  });
+
+  it('passes SignalK units and unknown units through unchanged', (t) => {
+    for (const unit of ['m/s', 'V']) {
       const { app, plugin } = converting(unit);
       t.after(() => plugin.stop());
 
